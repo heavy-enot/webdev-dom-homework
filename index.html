@@ -58,134 +58,83 @@
 
 <script>
   "use strict";
-  const buttonElement = document.getElementById("add-form-button");
-  const newCommentElement = document.getElementById("container");
-  const inputNameElement = document.getElementById("add-form-name");
-  const commentsElement = document.getElementById("add-form-text");
+     const commentsList = document.querySelector(".comments"); // Получаем элемент списка комментариев
 
-  const commentElements = document.querySelectorAll(".comment");
-  const initEventListeners = () => {
-    const commentElements = document.querySelectorAll(".comment");
-    for (const commentElement of commentElements) {
-      const likeButton = commentElement.querySelector(".like-button");
-      const likesCounter = commentElement.querySelector(".likes-counter");
-      const dataLikeNumb = parseInt(commentElement.getAttribute("data-likeNumb"));
+      // Обработчики изменений полей формы
+      const inputName = document.querySelector(".add-form-name");
+      const textAreaComment = document.querySelector(".add-form-text");
 
-      let liked = false;
-      let likes = dataLikeNumb;
+      inputName.addEventListener("input", () => {
+        validateInput(inputName);
+      });
 
-      if (likeButton.classList.contains("-active-like")) {
-        liked = true;
+      textAreaComment.addEventListener("input", () => {
+        validateTextarea(textAreaComment);
+      });
+
+      function validateInput(field) {
+        if (!field.value.trim()) field.classList.add("invalid");
+        else field.classList.remove("invalid");
       }
 
-      likeButton.addEventListener("click", () => {
-        if (liked) {
-          likes--;
-        } else {
-          likes++;
-        }
-        liked = !liked;
-        likesCounter.textContent = likes;
-        commentElement.setAttribute("data-likeNumb", likes);
-        likeButton.classList.toggle("-active-like");
+      function validateTextarea(field) {
+        if (!field.value.trim()) field.classList.add("invalid");
+        else field.classList.remove("invalid");
+      }
+
+      // Кнопка добавления комментария
+      const addButton = document.querySelector(".add-form-button");
+
+      addButton.addEventListener("click", (event) => {
+        event.preventDefault(); // Предотвращаем отправку формы
+        if (
+          !validateForm() ||
+          !inputName.value.trim() ||
+          !textAreaComment.value.trim()
+        )
+          return;
+
+        createNewComment();
       });
-    }
-  };
-  initEventListeners();
 
-  const dateElement = document.getElementById("date");
-  const myDate = new Date();
-  const formatDate = (date) => {
-    let data = date.getDate();
-    let month = date.getMonth();
-    let hour = date.getHours();
-    let minute = date.getMinutes();
+      function validateForm() {
+        let isValid = true;
+        validateInput(inputName); // Проверяем валидность поля 'Имя'
+        validateTextarea(textAreaComment); // Проверяем валидность поля 'Комментарий'
+        if (inputName.classList.contains("invalid") || textAreaComment.classList.contains("invalid")) {
+          alert("Заполните все поля правильно.");
+          isValid = false;
+        }
+        return isValid;
+      }
 
-    if (data < 10) {
-      data = "0" + data;
-    }
-    if (month < 10) {
-      month = "0" + (month + 1);
-    }
-    if (hour < 10) {
-      hour = "0" + hour;
-    }
-    return `${data}.${month}.${date.getFullYear().toString().substr(-2)} ${hour}:${minute};`
-  };
-  dateElement.textContent = formatDate(myDate);
-  buttonElement.addEventListener("click", () => {
-    if (inputNameElement.value === "" || commentsElement.value === "") {
-      return false;
-    }
+      function createNewComment() {
+        const newCommentTemplate = `
+          <li class="comment">
+            <div class="comment-header">
+              <div>${inputName.value}</div>
+              <div>${new Date().toLocaleString('ru-RU', { hour12: false })}.</div>
+            </div>
+            <div class="comment-body">
+              <div class="comment-text">${textAreaComment.value}</div>
+            </div>
+            <div class="comment-footer">
+              <div class="likes">
+                <span class="likes-counter">0</span>
+                <button class="like-button"></button>
+              </div>
+            </div>
+          </li>
+        `;
 
-    const oldListHtml = newCommentElement.innerHTML;
-    newCommentElement.innerHTML =
-      oldListHtml +
-      `<li class="comment" data-likeNumb="0"> 
-          <div class="comment-header"> 
-            <div>${inputNameElement.value}</div> 
-            <div>${formatDate(myDate)}</div> 
-          </div> 
-          <div class="comment-body"> 
-            <div class="comment-text"> 
-              ${commentsElement.value} 
-            </div> 
-          </div> 
-          <div class="comment-footer"> 
-            <div class="likes"> 
-              <span class="likes-counter">0</span> 
-              <button class="like-button"></button> 
-            </div> 
-          </div> 
-        </li>`;
-    initEventListeners();
-  });
-  const users = [
-    {
-      name: "Глеб Фокин",
-      coment: "Это будет первый комментарий на этой странице",
-      data: "12.02.22 12:18",
-      likesCounter: "3",
-      likesElement: false
-    },
-    {
-      name: "Варвара Н.",
-      coment: "Мне нравится как оформлена эта страница! ❤",
-      data: "13.02.22 19:22",
-      likesCounter: "75",
-      likesElement: true
-    },
-  ];
+        commentsList.insertAdjacentHTML("beforeend", newCommentTemplate); // Добавляем новый комментарий в конец списка
+        clearForm(); // Очищаем форму после отправки
+      }
 
-  const renderUsers = () => {
-    const usersHtml = users.map((user) => {
-      return `<li  class="comment"  data-likeNumb="${user.likesCounter}" > 
-          <div class="comment-header"> 
-            <div>${user.name}</div> 
-            <div>${user.data}</div> 
-          </div> 
-          <div class="comment-body"> 
-            <div class="comment-text"> 
-              ${user.coment} 
-            </div> 
-          </div> 
-          <div class="comment-footer"> 
-            <div class="likes"> 
-              <span class="likes-counter">${user.likesCounter}</span> 
-              <button class="like-button"></button> 
-            </div> 
-          </div> 
-        </li>`
-    })
-      .join("");
-
-    newCommentElement.innerHTML = usersHtml;
-    initEventListeners();
-  };
-
-  renderUsers();
-
-
+      function clearForm() {
+        inputName.value = "";
+        textAreaComment.value = "";
+      }
   console.log("It works!"); 
 </script>
 
